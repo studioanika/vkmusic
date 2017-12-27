@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/trans"
+    android:orientation="vertical"
+    android:paddingBottom="4dp"
+    android:paddingLeft="8dp"
+    android:paddingTop="4dp">
+
+    <ImageView
+        android:id="@+id/audio_download"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="8dp"
+        app:srcCompat="@drawable/icon_download" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignBottom="@+id/separator"
+            android:layout_alignTop="@+id/audio_title"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <View
+                android:id="@+id/song_progress_view"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:background="#b5e6c808" />
+
+            <View
+                android:id="@+id/song_anti_progress_view"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/audio_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:paddingRight="40dp"
+            android:singleLine="true"
+            android:text="SONG TITLE"
+            android:textAlignment="textStart"
+            android:textColor="@color/vk_white"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/audio_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="start"
+            android:paddingRight="40dp"
+            android:singleLine="true"
+            android:text="SONG TITLE"
+            android:textAlignment="textStart"
+            android:textColor="@color/dark"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btn_delete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/audio_title"
+            android:layout_gravity="end"
+            android:text="Delete"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/separator"
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:layout_below="@+id/btn_delete"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="4dp"
+            android:background="@color/dark" />
+    </LinearLayout>
+
+
+</RelativeLayout>
