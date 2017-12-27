@@ -457,7 +457,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     private void vk(){
         if(VKSdk.isLoggedIn()) {
 
-            
+
 
 
         }
