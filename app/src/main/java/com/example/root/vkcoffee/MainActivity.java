@@ -236,10 +236,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             recyclerView.setLayoutManager(layoutManager);
             recyclerView.setAdapter(audioAdapter);
 
-            ((SimpleItemAnimator) recyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
-            YoYo.with(Techniques.Landing)
-                    .duration(14)
-                    .playOn(recyclerView);
+            player.hideMini();
         }else Toast.makeText(this, "Список пуст...",Toast.LENGTH_SHORT).show();
 
     }
@@ -364,7 +361,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         try {
             Uri uri = Uri.parse(url);
             File root = null;
-            String folderdownload = "/VKCofee";
+            String folderdownload = "/VKPlus";
             String folder = mSettings.getString(APP_PREFERENCES_PATH,"");
             if(!folder.isEmpty()) {
                 if(folder.contains("sdcard1")) {
@@ -427,7 +424,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
     public  void  createNewFolder(){
         File folder = new File(Environment.getExternalStorageDirectory() +
-                File.separator + "VKCofee");
+                File.separator + "VKPlus");
         boolean success = true;
         if (!folder.exists()) {
             success = folder.mkdirs();

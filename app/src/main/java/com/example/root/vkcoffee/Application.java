@@ -1,6 +1,7 @@
 package com.example.root.vkcoffee;
 
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.vk.sdk.VKAccessToken;

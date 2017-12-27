@@ -186,8 +186,8 @@ public class JcPlayerView extends LinearLayout implements
         public void updateTitle(final String title) {
 //            final String mTitle = title;
 
-            final String name_t = title.split("-")[0].replace(" ","");
-            final String title_t = title.split("-")[1].replace(" ","");
+            final String name_t = title.split("-")[0];
+            final String title_t = title.split("-")[1];
             //title_t = title_t.replaceAll(" ","");
 
             YoYo.with(Techniques.FadeInLeft)
@@ -356,6 +356,7 @@ public class JcPlayerView extends LinearLayout implements
         this.avatarView = (AvatarView) findViewById(R.id.avatar);
 
         imageLoader1 = new PicassoLoader();
+
 
         imageLoader1.loadImage(avatarView, "https://vk.com/doc111489133_457112879?hash=9efe68af7d3def3c8d&dl=ef6543c6aa768ffa38", "");
 
