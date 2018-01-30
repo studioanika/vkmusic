@@ -4,16 +4,24 @@ import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.root.vkcoffee.retrofit.Api;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKAccessTokenTracker;
 import com.vk.sdk.VKSdk;
 import com.vk.sdk.util.VKUtil;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * Created by root on 24.12.17.
  */
 
 public class Application extends android.app.Application {
+
+    private static Api umoriliApi;
+    private Retrofit retrofit;
+
     VKAccessTokenTracker vkAccessTokenTracker = new VKAccessTokenTracker() {
         @Override
         public void onVKAccessTokenChanged(VKAccessToken oldToken, VKAccessToken newToken) {
@@ -28,9 +36,21 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        String[] fingerprints = VKUtil.getCertificateFingerprint(this, this.getPackageName());
 
-        vkAccessTokenTracker.startTracking();
-        VKSdk.initialize(this);
+        retrofit = new Retrofit.Builder()
+                .baseUrl("https://vk.com") //Базовая часть адреса
+                .addConverterFactory(GsonConverterFactory.create()) //Конвертер, необходимый для преобразования JSON'а в объекты
+                .build();
+        umoriliApi = retrofit.create(Api.class);
+
+        //String[] fingerprints = VKUtil.getCertificateFingerprint(this, this.getPackageName());
+
+        //vkAccessTokenTracker.startTracking();
+        //VKSdk.initialize(this);
     }
+
+    public static Api getApi() {
+        return umoriliApi;
+    }
+
 }

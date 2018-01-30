@@ -13,7 +13,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 
+import com.bumptech.glide.Glide;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcAudio;
+import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.OnLoadMoreListener;
 
 import java.util.List;
 
@@ -69,10 +71,23 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioAdapter
 //        return audiosViewHolder;
     }
 
+    public void setItems(List<JcAudio> list){
+        jcAudioList.addAll(list);
+        notifyDataSetChanged();
+    }
+
     @Override
     public void onBindViewHolder(AudioAdapterViewHolder holder, final int position) {
-        String title = jcAudioList.get(position).getTitle().split("-")[1];
-        String name = jcAudioList.get(position).getTitle().split("-")[0];
+        String title = null;
+        String name = null;
+        try {
+            title = jcAudioList.get(position).getTitle().split("--")[1];
+            name = jcAudioList.get(position).getTitle().split("--")[0];
+        } catch (Exception e) {
+            title = jcAudioList.get(position).getTitle().split("-")[1];
+            name = jcAudioList.get(position).getTitle().split("-")[0];
+            e.printStackTrace();
+        }
         holder.audioTitle.setText(title);
         holder.audioName.setText(" "+name);
         holder.itemView.setTag(jcAudioList.get(position));
@@ -83,7 +98,15 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioAdapter
                         jcAudioList.get(position).getPath(),"");
             }
         });
-
+        try{
+            if(jcAudioList.get(position).getAlbum_img().length()>10)Glide.with(holder.imgAlbum.getContext())
+                    .load(jcAudioList.get(position).getAlbum_img())
+                    .into(holder.imgAlbum);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        //if(activity.player.getCurrentAudio().getPath())
         applyProgressPercentage(holder, progressMap.get(position, 0.0f));
     }
 
@@ -93,6 +116,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioAdapter
      * @param percentage in float value. where 1 is equals as 100%
      */
     private void applyProgressPercentage(AudioAdapterViewHolder holder, float percentage) {
+        //holder.audioTitle.setVisibility(View.GONE);
         Log.d(TAG, "applyProgressPercentage() with percentage = " + percentage);
         LinearLayout.LayoutParams progress = (LinearLayout.LayoutParams) holder.viewProgress.getLayoutParams();
         LinearLayout.LayoutParams antiProgress = (LinearLayout.LayoutParams) holder.viewAntiProgress.getLayoutParams();
@@ -103,6 +127,13 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioAdapter
         antiProgress.weight = 1.0f - percentage;
         holder.viewAntiProgress.setLayoutParams(antiProgress);
     }
+    private final int VIEW_TYPE_ITEM = 0;
+    private final int VIEW_TYPE_LOADING = 1;
+    private OnLoadMoreListener mOnLoadMoreListener;
+    private boolean isLoading;
+    private int visibleThreshold = 5;
+    private int lastVisibleItem, totalItemCount;
+
 
     @Override
     public int getItemCount() {
@@ -133,7 +164,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioAdapter
         private View viewProgress;
         private View viewAntiProgress;
         private TextView audioName;
-        private ImageView imgDownload;
+        private ImageView imgDownload, imgAlbum;
 
         public AudioAdapterViewHolder(View view){
             super(view);
@@ -141,6 +172,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioAdapter
             this.audioName = (TextView) view.findViewById(R.id.audio_name);
             this.btnDelete = (Button) view.findViewById(R.id.btn_delete);
             this.imgDownload = (ImageView) view.findViewById(R.id.audio_download);
+            this.imgAlbum = (ImageView) view.findViewById(R.id.audio_album);
             viewProgress = view.findViewById(R.id.song_progress_view);
             viewAntiProgress = view.findViewById(R.id.song_anti_progress_view);
 

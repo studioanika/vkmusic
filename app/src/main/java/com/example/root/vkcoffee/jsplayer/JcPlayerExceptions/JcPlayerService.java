@@ -9,13 +9,24 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.webkit.CookieManager;
 
+import com.example.root.vkcoffee.Application;
+import com.example.root.vkcoffee.MainActivity;
 import com.example.root.vkcoffee.Origin;
+import com.example.root.vkcoffee.Prefs;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by root on 24.12.17.
@@ -28,7 +39,7 @@ public class JcPlayerService extends Service implements
         MediaPlayer.OnErrorListener{
 
     private static final String TAG = JcPlayerService.class.getSimpleName();
-
+    private static String STR = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN0PQRSTUVWXYZO123456789+/=";
     private final IBinder mBinder = new JcPlayerServiceBinder();
     private MediaPlayer mediaPlayer;
     private boolean isPlaying;
@@ -41,6 +52,8 @@ public class JcPlayerService extends Service implements
     private List<JcPlayerView.JcPlayerViewStatusListener> jcPlayerStatusListeners;
     private JcPlayerView.JcPlayerViewServiceListener notificationListener;
     private AssetFileDescriptor assetFileDescriptor = null; // For Asset and Raw file.
+
+    String lastPath = "";
 
     public class JcPlayerServiceBinder extends Binder {
         public JcPlayerService getService() {
@@ -144,10 +157,50 @@ public class JcPlayerService extends Service implements
     }
 
     private JcAudio tempJcAudio;
-    public void play(JcAudio jcAudio) {
+    public void play(final JcAudio jcAudio) {
+
         tempJcAudio = this.currentJcAudio;
         this.currentJcAudio = jcAudio;
 
+        final String ids = jcAudio.getPath();
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+        Map<String, String> body = new HashMap();
+        body.put("act", "reload_audio");
+        body.put("al", "1");
+        body.put("ids", ids);
+        Prefs prefs = new Prefs(getBaseContext());
+        final int id = prefs.getID();
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> res) {
+                try {
+                    String path = "";
+                    String response = ((ResponseBody) res.body()).string();
+                    if (response.length() < 100) {
+                        path = lastPath;
+                    }else {
+                        path = decode(response.substring(response.indexOf("https"), response.indexOf("\",\"")).replace("\\", ""), id);
+                        lastPath = path;
+                    }
+                    jcAudio.setPath(path);
+                    pla(jcAudio);
+                    String dsdsd ="";
+
+
+
+                } catch (Exception e) {
+                    String er = e.toString();
+                    //ThrowableExtension.printStackTrace(e);
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            }
+        });
+
+
+    }
+
+    public void pla(JcAudio jcAudio){
         if (isAudioFileValid(jcAudio.getPath(), jcAudio.getOrigin())) {
             try {
                 if (mediaPlayer == null) {
@@ -266,6 +319,7 @@ public class JcPlayerService extends Service implements
                                 jcStatus.setDuration(mediaPlayer.getDuration());
                                 jcStatus.setCurrentPosition(mediaPlayer.getCurrentPosition());
                                 jcPlayerViewStatusListener.onTimeChangedStatus(jcStatus);
+
                             }
                         }
                         Thread.sleep(200);
@@ -397,5 +451,106 @@ public class JcPlayerService extends Service implements
 
     public JcAudio getCurrentAudio() {
         return currentJcAudio;
+    }
+
+    private static String shiftArray(String[] array) {
+        String result = array[0];
+        System.arraycopy(array, 1, array, 0, array.length - 1);
+        return result;
+    }
+
+    private static String decode(String url, int userId) {
+        try {
+            String[] vals = url.split("/?extra=")[1].split("#");
+            url = vk_o(vals[0]);
+            String[] opsArr = vk_o(vals[1]).split(String.valueOf('\t'));
+            for (int i = opsArr.length - 1; i >= 0; i--) {
+                String[] argsArr = opsArr[i].split(String.valueOf('\u000b'));
+                String opInd = shiftArray(argsArr);
+                int i2 = -1;
+                url = vk_i(url, Integer.parseInt(argsArr[0]), userId);
+                String s ="";
+    //            switch (i2) {
+    //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_autoDismiss /*0*/:
+    //                    url = vk_i(url, Integer.parseInt(argsArr[0]), userId);
+    //                    break;
+    //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_autoFinish /*1*/:
+    //                    url = vk_v(url);
+    //                    break;
+    //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_backgroundColour /*2*/:
+    //                    url = vk_r(url, Integer.parseInt(argsArr[0]));
+    //                    break;
+    //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_captureTouchEventOnFocal /*3*/:
+    //                    url = vk_x(url, argsArr[0]);
+    //                    break;
+    //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_captureTouchEventOutsidePrompt /*4*/:
+    //                    url = vk_s(url, Integer.parseInt(argsArr[0]));
+    //                    break;
+    //                default:
+    //                    break;
+    //            }
+            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return url.substring(0, url.indexOf("?extra="));
+    }
+
+    private static String vk_i(String str, int e, int userID) {
+        return vk_s(str, e ^ userID);
+    }
+    private static String vk_s(String str, int start) {
+        StringBuilder result = null;
+        try {
+            result = new StringBuilder(str);
+            int len = str.length();
+            int e = start;
+            if (len > 0) {
+                int i;
+                Integer[] shufflePos = new Integer[len];
+                for (i = len - 1; i >= 0; i--) {
+                    e = Math.abs((((i + 1) * len) ^ (e + i)) % len);
+                    shufflePos[i] = Integer.valueOf(e);
+                }
+                for (i = 1; i < len; i++) {
+                    int offset = shufflePos[(len - i) - 1].intValue();
+                    String prev = result.substring(i, i + 1);
+                    result.replace(i, i + 1, result.substring(offset, offset + 1));
+                    result.replace(offset, offset + 1, prev);
+                }
+            }
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
+        return result.toString();
+    }
+
+    private static String vk_o(String str) {
+        StringBuilder b = null;
+        try {
+            int len = str.length();
+            int i = 0;
+            b = new StringBuilder();
+            int index2 = 0;
+            for (int s = 0; s < len; s++) {
+                int symIndex = STR.indexOf(str.substring(s, s + 1));
+                if (symIndex >= 0) {
+                    if (index2 % 4 != 0) {
+                        i = (i << 6) + symIndex;
+                    } else {
+                        i = symIndex;
+                    }
+                    if (index2 % 4 != 0) {
+                        index2++;
+                        b.append((char) ((i >> ((index2 * -2) & 6)) & 255));
+                    } else {
+                        index2++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return b.toString();
     }
 }

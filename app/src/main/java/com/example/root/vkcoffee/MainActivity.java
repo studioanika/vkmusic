@@ -7,12 +7,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -20,34 +23,47 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.bumptech.glide.Glide;
 import com.codekidlabs.storagechooser.StorageChooser;
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.example.root.vkcoffee.fragment.FragmentFriends;
+import com.example.root.vkcoffee.fragment.FragmentGroups;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcAudio;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcPlayerView;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcStatus;
 import com.example.root.vkcoffee.slider.Fragment1;
 import com.example.root.vkcoffee.slider.Fragment2;
+import com.github.ybq.endless.Endless;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
@@ -63,29 +79,59 @@ import com.vk.sdk.api.VKRequest;
 import com.vk.sdk.api.VKResponse;
 import com.vk.sdk.api.methods.VKApiFriends;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
+import java.net.CookieStore;
+import java.net.HttpCookie;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import android.support.design.widget.CoordinatorLayout;
 
-public class MainActivity extends AppCompatActivity implements JcPlayerView.OnInvalidPathListener, JcPlayerView.JcPlayerViewStatusListener {
-    private static final String TAG = "";
-    private String COOKIE = "; first_name=%D0%94%D0%BC%D0%B8%D1%82%D1%80%D0%B8%D0%B9; photo_50=https%3A%2F%2Fpp.userapi.com%2Fc616429%2Fv616429054%2F1aadd%2FJ9qwJByyOqc.jpg; _ym_uid=1514064053885492226; _ym_isad=2";
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
+import agency.tango.android.avatarview.IImageLoader;
+import agency.tango.android.avatarview.loader.PicassoLoader;
+import agency.tango.android.avatarview.views.AvatarView;
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class MainActivity extends AppCompatActivity implements JcPlayerView.OnInvalidPathListener, JcPlayerView.JcPlayerViewStatusListener, NavigationView.OnNavigationItemSelectedListener {
+    private static final String TAG = "main_activity";
+    private String COOKIE = "; first_name=%D0%94%D0%BC%D0%B8%D1%82%D1%80%D0%B8%D0%B9; photo_50=https%3A%2F%2Fpp.userapi.com%2Fc616429%2Fv616429054%2F1aadd%2FJ9qwJByyOqc.jpg; _ym_uid=1514064053885492226; _ym_isad=2";
+    private static String STR = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN0PQRSTUVWXYZO123456789+/=";
     private static final String[] sMyScope = new String[]{
             VKScope.GROUPS,
             VKScope.FRIENDS
     };
+    IImageLoader imageLoader1;
 
-
-    private JcPlayerView player;
+    public JcPlayerView player;
     private RecyclerView recyclerView;
     private AudioAdapter audioAdapter;
     ProgressBar progressBar;
     ImageView img;
     Toolbar toolbar;
+    boolean isResume = false;
 
     File currentRootDirectory = Environment.getExternalStorageDirectory();
     private DownloadManager mgr=null;
@@ -97,17 +143,29 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     private static final String APP_PREFERENCES_Permiion = "p";
     private SharedPreferences mSettings;
     InterstitialAd interstitial;
+    boolean isL = false;
+    Endless endless;
 
 
     private static Fragment fragment;
     private FragmentManager fragmentManager;
     private FragmentTransaction transaction;
+    NavigationView navigationView;
+    public FrameLayout frame;
+    AvatarView avatarka;
+    TextView tv_name;
 
     private static final int NUM_PAGES = 2;
     private ViewPager mPager;
     private PagerAdapter mPagerAdapter;
     Prefs prefs;
 
+    private int visibleThreshold = 5;
+    private int lastVisibleItem, totalItemCount;
+    private boolean loading = true;
+
+    List<JcAudio> newList = new ArrayList<>();
+    String lastPath = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,28 +177,49 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        View head = navigationView.getHeaderView(0);
+        tv_name = (TextView) head.findViewById(R.id.header_name);
+        imageLoader1 = new PicassoLoader();
+        tv_name.setText(prefs.getNAME());
+        avatarka = (AvatarView) head.findViewById(R.id.header_avatar);
+        imageLoader1.loadImage(avatarka, prefs.getPHOTO(), "загрузка...");
+
         progressBar = (ProgressBar) findViewById(R.id.progressBar2);
         recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
         player = (JcPlayerView) findViewById(R.id.jcplayer);
         player.registerInvalidPathListener(this);
         player.registerStatusListener(this);
         img = (ImageView) findViewById(R.id.img_bg);
-        Glide.with(img.getContext()).load(R.drawable.bg_1).into(img);
+        frame = (FrameLayout) findViewById(R.id.main_container);
+//        endless = Endless.applyTo(recyclerView,
+//                progressBar
+
+        //Glide.with(img.getContext()).load(R.drawable.bg_1).into(img);
 
         mgr=
                 (DownloadManager)this.getSystemService(Context.DOWNLOAD_SERVICE);
 
         mSettings = getSharedPreferences(APP_PREFERENCES, Context.MODE_PRIVATE);
 
+//        new GetMyAudio(progressBar,MainActivity.this,0,
+//                    "","");
 
-        if(VKSdk.isLoggedIn()) {
-            new GetAudio2(progressBar,MainActivity.this,0,
-                    "",String.valueOf(VKSdk.getAccessToken().userId)
-            ).execute();
-            vk();
+        if(prefs.getID()==0) initWV();
+        else {
+            updateCookie();
+            String cookies = CookieManager.getInstance().getCookie("https://vk.com");
+            Log.d(TAG, "All the cookies in a string:" + cookies);
+            getMyAudio(0, true);
         }
-        else VKSdk.login(this, sMyScope);
-
 
     }
 
@@ -157,9 +236,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
                     showRecycler();
                     player.showMini();
                 }
-                new GetAudio(progressBar,MainActivity.this,1,
-                        query,String.valueOf(VKSdk.getAccessToken().userId)
-                ).execute();
+                getAudioSearch(query);
 
                 return false;
             }
@@ -196,12 +273,9 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             @Override
             public void onResult(VKAccessToken res) {
 // Пользователь успешно авторизовался
-                if(prefs.getFirst()==0)initSlider();
+                //
+                // if(prefs.getFirst()==0)initSlider();
 
-                new GetAudio2(progressBar,MainActivity.this,0,
-                        "",String.valueOf(VKSdk.getAccessToken().userId)
-                ).execute();
-                vk();
             }
             @Override
             public void onError(VKError error) {
@@ -213,12 +287,17 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         }
     }
 
-    protected void adapterSetup(final ArrayList<JcAudio> audios) {
-        if(audios!=null && audios.size()!=0){
-            player.initPlaylist(audios);
-            //player.playAudio(player.getMyPlaylist().get(0));
+    public void adapterSetup(final ArrayList<JcAudio> audios, final int offset, final int type) {
 
-            audioAdapter = new AudioAdapter(player.getMyPlaylist(), recyclerView.getContext());
+        if(newList.size()!=0){
+            progressBar.setVisibility(View.GONE);
+            //player.pause();
+            final LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+            recyclerView.setLayoutManager(layoutManager);
+            audioAdapter = new AudioAdapter(newList, recyclerView.getContext());
+            recyclerView.setAdapter(audioAdapter);
+            player.initPlaylist(newList);
+            //player.pause();
             audioAdapter.setOnItemClickListener(new AudioAdapter.OnItemClickListener() {
                 @Override
                 public void onItemClick(int position) {
@@ -232,13 +311,16 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
                 }
             });
-            LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-            recyclerView.setLayoutManager(layoutManager);
-            recyclerView.setAdapter(audioAdapter);
+//            endless.setLoadMoreListener(new Endless.LoadMoreListener() {
+//                @Override
+//                public void onLoadMore(int i) {
+//                    getMyAudio(player.getMyPlaylist().size());
+//                }
+//            });
 
-            player.hideMini();
+            player.showMini();
         }else Toast.makeText(this, "Список пуст...",Toast.LENGTH_SHORT).show();
-
+        updateCookie();
     }
 
     @Override
@@ -299,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
         super.onPause();
         //player.pause();
-
+        isResume = false;
         player.createNotification();
     }
 
@@ -347,79 +429,122 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && recyclerView != null && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE}, 199);
         }
-        if(prefs.getFirst()==0)initSlider();
-
+        //if(prefs.getFirst()==0)initSlider();
+//        new GetMyAudio(progressBar,MainActivity.this,0,
+//                "","").execute();
+//        if(prefs.getID() == 0) initWV();
+//        else {
+//            updateCookie();
+//            getMyAudio(0, true);
+//            //getAudioSearch("vai malandra");
+//            //getReccomeded();
+//            //getReccomededNews();
+//            //getReccomededPopualar();
+//            //getReccomededFeed();
+//        }
 
         Log.e("main", "create folder");
     }
 
     @SuppressLint("NewApi")
-    public void startDownload(String name, String url, String path) {
+    public void startDownload(final String name, final String url, String path) {
         createNewFolder();
         String per = (mSettings.getString(APP_PREFERENCES_Permiion, ""));
-
-        try {
-            Uri uri = Uri.parse(url);
-            File root = null;
-            String folderdownload = "/VKPlus";
-            String folder = mSettings.getString(APP_PREFERENCES_PATH,"");
-            if(!folder.isEmpty()) {
-                if(folder.contains("sdcard1")) {
-                    folderdownload = folder.split("sdcard1/")[1];
-                    root = new File(Environment.getExternalStorageDirectory() + File.separator+ folderdownload+"/");
-                    Uri pathe = Uri.withAppendedPath(Uri.fromFile(root), name+".mp3");
-
-                    DownloadManager.Request req = new DownloadManager.Request(uri);
-
-                    req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
-                            | DownloadManager.Request.NETWORK_MOBILE)
-                            .setAllowedOverRoaming(false)
-                            .setTitle(name)
-                            .setDescription("Идет загрузка файла...")
-                            .setDestinationUri(pathe);
-                    //.setDestinationInExternalPublicDir(Environment.getExternalStorageDirectory() ,
-                    //name+".mp3");
-
-                    lastDownload = mgr.enqueue(req);
-                }
-                else {
+        final String ids = url;
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+        Map<String, String> body = new HashMap();
+        body.put("act", "reload_audio");
+        body.put("al", "1");
+        body.put("ids", ids);
+        Prefs prefs = new Prefs(getBaseContext());
+        final int id = prefs.getID();
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> res) {
+                try {
+                    String path = "";
+                    String response = ((ResponseBody) res.body()).string();
+                    if (response.length() < 100) {
+                        path = lastPath;
+                    }else {
+                        path = decode(response.substring(response.indexOf("https"), response.indexOf("\",\"")).replace("\\", ""), id);
+                        lastPath = path;
+                    }
 
                     try {
-                        if(folder.contains("extSdCard/")) folderdownload = folder.split("extSdCard/")[1];
-                        else folderdownload = folder.split("emulated/0")[1];
+                        Uri uri = Uri.parse(path);
+                        File root = null;
+                        String folderdownload = "/VKPlus";
+                        String folder = mSettings.getString(APP_PREFERENCES_PATH,"");
+                        if(!folder.isEmpty()) {
+                            if(folder.contains("sdcard1")) {
+                                folderdownload = folder.split("sdcard1/")[1];
+                                root = new File(Environment.getExternalStorageDirectory() + File.separator+ folderdownload+"/");
+                                Uri pathe = Uri.withAppendedPath(Uri.fromFile(root), name+".mp3");
+
+                                DownloadManager.Request req = new DownloadManager.Request(uri);
+
+                                req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
+                                        | DownloadManager.Request.NETWORK_MOBILE)
+                                        .setAllowedOverRoaming(false)
+                                        .setTitle(name)
+                                        .setDescription("Идет загрузка файла...")
+                                        .setDestinationUri(pathe);
+                                //.setDestinationInExternalPublicDir(Environment.getExternalStorageDirectory() ,
+                                //name+".mp3");
+
+                                lastDownload = mgr.enqueue(req);
+                            }
+                            else {
+
+                                try {
+                                    if(folder.contains("extSdCard/")) folderdownload = folder.split("extSdCard/")[1];
+                                    else folderdownload = folder.split("emulated/0")[1];
+                                }catch (Exception e){
+                                    folderdownload = folder.split("sdcard0/")[1];
+                                }
+                                DownloadManager.Request req = new DownloadManager.Request(uri);
+                                req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
+                                        | DownloadManager.Request.NETWORK_MOBILE)
+                                        .setAllowedOverRoaming(false)
+                                        .setTitle(name)
+                                        .setDescription("Идет загрузка файла...")
+                                        .setDestinationInExternalPublicDir(folderdownload ,
+                                                name+".mp3");
+
+                                lastDownload = mgr.enqueue(req);
+                            }
+                        }else {
+
+                            DownloadManager.Request req = new DownloadManager.Request(uri);
+                            req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
+                                    | DownloadManager.Request.NETWORK_MOBILE)
+                                    .setAllowedOverRoaming(false)
+                                    .setTitle(name)
+                                    .setDescription("Идет загрузка файла...")
+                                    .setDestinationInExternalPublicDir(folderdownload ,
+                                            name+".mp3");
+
+                            lastDownload = mgr.enqueue(req);
+                        }
+                        Toast.makeText(MainActivity.this, "Начало загрузки", Toast.LENGTH_SHORT).show();
+
                     }catch (Exception e){
-                        folderdownload = folder.split("sdcard0/")[1];
+                        Toast.makeText(MainActivity.this, "Ошибка загрузки...", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     }
-                    DownloadManager.Request req = new DownloadManager.Request(uri);
-                    req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
-                            | DownloadManager.Request.NETWORK_MOBILE)
-                            .setAllowedOverRoaming(false)
-                            .setTitle(name)
-                            .setDescription("Идет загрузка файла...")
-                            .setDestinationInExternalPublicDir(folderdownload ,
-                                    name+".mp3");
 
-                    lastDownload = mgr.enqueue(req);
+
+
+                } catch (Exception e) {
+                    String er = e.toString();
+                    //ThrowableExtension.printStackTrace(e);
                 }
-            }else {
-
-                DownloadManager.Request req = new DownloadManager.Request(uri);
-                req.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI
-                        | DownloadManager.Request.NETWORK_MOBILE)
-                        .setAllowedOverRoaming(false)
-                        .setTitle(name)
-                        .setDescription("Идет загрузка файла...")
-                        .setDestinationInExternalPublicDir(folderdownload ,
-                                name+".mp3");
-
-                lastDownload = mgr.enqueue(req);
             }
-            Toast.makeText(MainActivity.this, "Начало загрузки", Toast.LENGTH_SHORT).show();
 
-        }catch (Exception e){
-            Toast.makeText(MainActivity.this, "Ошибка загрузки...", Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
-        }
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            }
+        });
+
     }
 
     public  void  createNewFolder(){
@@ -439,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
     private void ads(){
         Random random = new Random();
-        int i = random.nextInt(3);
+        int i = random.nextInt(4);
         Log.e("random", String.valueOf(i));
         if(i==1) {
             MobileAds.initialize(this, getResources().getString(R.string.id_ad2));
@@ -530,7 +655,6 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             return NUM_PAGES;
         }
     }
-
     public void nextFragment(){
         switch (mPager.getCurrentItem()){
             case 0:
@@ -540,7 +664,694 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
                 // скрыть фрагмент
                 mPager.setVisibility(View.GONE);
                 prefs.setFirst();
+                getMyAudio(0, true);
                 break;
         }
     }
+    private void initWV(){
+        final WebView webView = (WebView) findViewById(R.id.webView);
+        webView.setVisibility(View.VISIBLE);
+        webView.setWebViewClient(new WebViewClient() {
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+
+            }
+
+            public void onPageFinished(WebView view, String url) {
+                String cookie = CookieManager.getInstance().getCookie(url);
+                if (cookie == null || !cookie.contains("xsid")) {
+                    String cookies = CookieManager.getInstance().getCookie(url);
+                    Log.d(TAG, "All the cookies in a string:" + cookies);
+                    webView.setVisibility(View.VISIBLE);
+
+                } else {
+                    CookieSyncManager.getInstance().sync();
+                    getUserData();
+                    //prefs.setID("");
+                    webView.setVisibility(View.GONE);
+                    String cookies = CookieManager.getInstance().getCookie(url);
+                    Log.d(TAG, "All the cookies in a string:" + cookies);
+
+
+
+                }
+
+            }
+        });
+
+        webView.loadUrl("https://vk.com");
+    }
+    public void getUserData() {
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+        Map<String, String> body = new HashMap();
+        body.put("act", "a_get_fast_chat");
+        body.put("al", "1");
+        Application.getApi().getUser(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> result) {
+                Exception e;
+                try {
+                    String response = ((ResponseBody) result.body()).string();
+                    JSONObject me = new JSONObject(Html.fromHtml(response.substring(response.indexOf("<!json>") + 7)).toString()).getJSONObject("me");
+                    //User user = new User(me.getString("id"), me.getString("name"), me.getString("photo"));
+                    String id = me.getString("id");
+                    prefs.setNAME(me.getString("name"));
+                    prefs.setPHOTO(me.getString("photo"));
+                    imageLoader1 = new PicassoLoader();
+                    imageLoader1.loadImage(avatarka, prefs.getPHOTO(), "загрузка...");
+                    prefs.setID(id);
+                    tv_name.setText(prefs.getNAME());
+
+                    getMyAudio(0, true);
+                    String d = "";
+
+                } catch (Exception e2) {
+                    e = e2;
+                }
+
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            }
+        });
+        return;
+
+    }
+    private void getMyAudio(final int offset, boolean clear){
+            updateCookie();
+            if(clear) newList.clear();
+            progressBar.setVisibility(View.VISIBLE);
+            String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+            Map<String, String> body = new HashMap<>();
+            body.put("access_hash", "");
+            body.put("owner_id", String.valueOf(prefs.getID()));
+            body.put("playlist_id", "-1");
+            if(offset !=0 )body.put("offset", "100");
+            else body.put("offset", "0");
+            //body.put("count", "15");
+            body.put("act", "load_section");
+            //body.put("section", "all");
+            body.put("al", "1");
+            body.put("type", "playlist");
+            Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    try {
+                        String b = response.body().string();
+                        preparePlaylist(b, offset, 1);
+                        //String sd = "";
+                    } catch (Exception e) {
+
+                    }
+                }
+
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                }
+            });
+
+    }
+    public void getMyFriendsAudio(String id){
+        frame.setVisibility(View.GONE);
+        newList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", id);
+        body.put("playlist_id", "-1");
+        body.put("offset", "0");
+        //body.put("count", "15");
+        body.put("act", "load_section");
+        //body.put("section", "all");
+        body.put("al", "1");
+        body.put("type", "playlist");
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    preparePlaylist(b, 0, 7);
+                    //String sd = "";
+                } catch (Exception e) {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(MainActivity.this, "Аудиозаписи видны только владельцу страницы...",Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+
+    }
+    public void getWallAudio(final String id){
+        frame.setVisibility(View.GONE);
+
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", "-"+id);
+        body.put("offset", "0");
+        body.put("act", "get_wall");
+        //body.put("section", "all");
+        body.put("al", "1");
+        body.put("type", "own");
+        body.put("wall_start_from", "0");
+        Application.getApi().getWall(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    List<JcAudio> list = new ArrayList<>();
+                    String b = response.body().string();
+                    String dc = b.substring(b.indexOf("<div"), b.lastIndexOf("/div>"));
+                    Document document = Jsoup.parse("<html>"+dc+"</html>");
+                    Elements elements = document.select("div.audio_row_with_cover");
+                    //Elements elements = document.select("div.audio_row__inner");
+
+                    for(int i =0; i<elements.size(); i++){
+                        Element element = elements.get(i);
+                        String id_crash  = element.attr("data-audio").toString();
+                        String name = element.select("a.audio_row__performer").text().toString()+
+                                "-"+element.select("span.audio_row__title_inner").text().toString();
+                        String id = id_crash.split(",")[1] + id_crash.split(",")[0];
+                        id = id.replace("[","_");
+                        list.add(JcAudio.createFromURL(name ,id));
+
+                    }
+
+                    if(list.size()==0){
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(MainActivity.this, "На стене группы нет аудиозаписей...",Toast.LENGTH_SHORT).show();
+                    }else {
+                        getWallAudio2(id, list);
+                    }
+
+                    int i = elements.size();
+                    String sd = "";
+                } catch (Exception e) {
+                    progressBar.setVisibility(View.GONE);
+                    //Toast.makeText(MainActivity.this, "Аудиозаписи видны только владельцу страницы...",Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+
+    }
+    public void getWallAudio2(String id, final List<JcAudio> arr){
+        frame.setVisibility(View.GONE);
+
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", "-"+id);
+        body.put("offset", "10");
+        body.put("act", "get_wall");
+        //body.put("section", "all");
+        body.put("al", "1");
+        body.put("type", "own");
+        body.put("wall_start_from", "10");
+        Application.getApi().getWall(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    List<JcAudio> list = new ArrayList<>();
+                    ArrayList<JcAudio> nul = new ArrayList<>();
+                    list.addAll(arr);
+                    String b = response.body().string();
+                    String dc = b.substring(b.indexOf("<div"), b.lastIndexOf("/div>"));
+                    Document document = Jsoup.parse("<html>"+dc+"</html>");
+                    Elements elements = document.select("div.audio_row_with_cover");
+                    //Elements elements = document.select("div.audio_row__inner");
+
+                    for(int i =0; i<elements.size(); i++){
+                        Element element = elements.get(i);
+                        String id_crash  = element.attr("data-audio").toString();
+                        String name = element.select("a.audio_row__performer").text().toString()+
+                                "-"+element.select("span.audio_row__title_inner").text().toString();
+                        String id = id_crash.split(",")[1] + id_crash.split(",")[0];
+                        id = id.replace("[","_");
+                        list.add(JcAudio.createFromURL(name ,id));
+
+                    }
+
+                    if(list.size()==0){
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(MainActivity.this, "На стене группы нет аудиозаписей...",Toast.LENGTH_SHORT).show();
+                    }else {
+                        newList.clear();
+                        newList = list;
+                        progressBar.setVisibility(View.GONE);
+                        adapterSetup(nul,0,9);
+                    }
+
+                    int i = elements.size();
+                    String sd = "";
+                } catch (Exception e) {
+                    progressBar.setVisibility(View.GONE);
+                    //Toast.makeText(MainActivity.this, "Аудиозаписи видны только владельцу страницы...",Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                progressBar.setVisibility(View.GONE);
+            }
+        });
+
+    }
+    private void getAudioSearch(String q){
+        newList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", String.valueOf(prefs.getID()));
+        body.put("search_q", q);
+        body.put("offset", "0");
+        //body.put("is_loading_all", "1");
+        body.put("act", "load_section");
+        //body.put("section", "all");
+        body.put("al", "1");
+        body.put("type", "search");
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    preparePlaylist(b, 0, 2);
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
+    private void getReccomeded(){
+        newList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", String.valueOf(prefs.getID()));
+        body.put("offset", "0");
+        body.put("al", "1");
+        body.put("act", "load_section");
+        body.put("type", "recoms");
+        body.put("playlist_id", "recoms1");
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    preparePlaylist(b, 0, 3);
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
+    private void getReccomededNews(){
+        newList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", String.valueOf(prefs.getID()));
+        body.put("offset", "0");
+        body.put("al", "1");
+        body.put("act", "load_section");
+        body.put("type", "recoms");
+        body.put("playlist_id", "recoms14");
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    preparePlaylist(b, 0, 4);
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
+    private void getReccomededPopualar(){
+        newList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", String.valueOf(prefs.getID()));
+        body.put("offset", "0");
+        body.put("al", "1");
+        body.put("act", "load_section");
+        body.put("type", "recoms");
+        body.put("playlist_id", "recoms8");
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    preparePlaylist(b, 0, 5);
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
+    private void getReccomededFeed(){
+        newList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", String.valueOf(prefs.getID()));
+        body.put("offset", "0");
+        body.put("al", "1");
+        body.put("act", "load_section");
+        body.put("type", "feed");
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    preparePlaylist(b, 0,6);
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
+    private void preparePlaylist(String json, int offset, int type) throws JSONException {
+        int total = 0;
+        //getSongUrl();
+        JSONArray songJson = new JSONArray();
+        String tmpJson = json.substring(json.indexOf("<!json>") + 7, json.indexOf("}<!>") + 1);
+        JSONObject jSONObject;
+        try {
+            jSONObject = new JSONObject(tmpJson);
+            songJson = jSONObject.getJSONArray("list");
+            total = Integer.parseInt(jSONObject.getString("totalCount"));
+            String dsda = "";
+        } catch (Exception e) {
+            jSONObject = new JSONObject(tmpJson.substring(0, tmpJson.indexOf("[[") - 7) + tmpJson.substring(tmpJson.indexOf("]]") + 3, tmpJson.length()));
+            String sd = "";
+            total = Integer.parseInt(jSONObject.getString("totalCount"));
+            //JSONArray jSONArray = new JSONArray(fixList(tmpJson));
+        }
+
+        String ds = "";
+        int size = songJson.length();
+        ArrayList<JcAudio> songList = new ArrayList();
+        for (int i = 0; i < size; i++) {
+            JSONArray jsonSong = songJson.getJSONArray(i);
+            String[] coverUrl = jsonSong.getString(14).split(",");
+            String id = jsonSong.getString(1) + "_" + jsonSong.getString(0);
+            String hash = jsonSong.getString(2);
+            String album = jsonSong.getString(14).split(",")[0];
+            String title = jsonSong.getString(3) + "--" + jsonSong.getString(4);
+            String dd = "";
+            JcAudio audio = JcAudio.createFromURL(title ,id);
+            audio.setAlbum_img(album);
+            newList.add(audio);
+
+        }
+        if(type == 1) {
+            if(offset!=0) adapterSetup(songList, offset, type);
+            else  getMyAudio(100, false);
+        }else adapterSetup(songList, 0, 3);
+
+
+
+    }
+    public void updateCookie(){
+
+        WebView webView = (WebView) findViewById(R.id.webView);
+        webView.loadUrl("https://vk.com");
+        webView.setWebViewClient(new WebViewClient() {
+            public void onPageFinished(WebView view, String url) {
+                CookieSyncManager.getInstance().sync();
+                //getMyAudio(0, true);
+            }
+        });
+
+    }
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+        frame.setVisibility(View.GONE);
+       if(prefs.getID()!=0){
+           String title = "";
+           switch (id){
+               case R.id.nav_my:
+                   title = "Мои аудиозаписи";
+                   getMyAudio(0, true);
+                   break;
+               case R.id.nav_special:
+                   title = "Специально для вас";
+                   getReccomeded();
+                   break;
+               case R.id.nav_news:
+                   title = "Новинки";
+                   getReccomededNews();
+                   break;
+               case R.id.nav_popular:
+                   title = "Популярное";
+                   getReccomededPopualar();
+                   break;
+               case R.id.nav_feed:
+                   title = "Обновления друзей";
+                   getReccomededFeed();
+                   break;
+               case R.id.nav_friends:
+                   title = "Друзья";
+                   fragment = new FragmentFriends(this);
+                   transactionFragment();
+                   break;
+               case R.id.nav_groups:
+                   title = "Группы";
+                   fragment = new FragmentGroups(this);
+                   transactionFragment();
+                   break;
+               case R.id.nav_folder:
+                   showStorage();
+                   break;
+               case R.id.nav_exit:
+                   clearCookies(this);
+                   prefs.setPHOTO("0");
+                   prefs.setNAME("");
+                   prefs.setID("");
+                   initWV();
+                   break;
+           }
+           getSupportActionBar().setTitle(title);
+       }else Toast.makeText(MainActivity.this, "Требуется  авторизация...", Toast.LENGTH_SHORT).show();
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+
+        return true;
+    }
+
+    private void transactionFragment(){
+        frame.setVisibility(View.VISIBLE);
+        if (fragment != null) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            fragmentManager.beginTransaction().replace(R.id.main_container, fragment).commit();
+
+        } else {
+            Log.e("MainActivity", "Error in creating fragment");
+        }
+    }
+    @SuppressWarnings("deprecation")
+    public static void clearCookies(Context context)
+    {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            Log.d(TAG, "Using clearCookies code for API >=" + String.valueOf(Build.VERSION_CODES.LOLLIPOP_MR1));
+            CookieManager.getInstance().removeAllCookies(null);
+            CookieManager.getInstance().flush();
+        } else
+        {
+            Log.d(TAG, "Using clearCookies code for API <" + String.valueOf(Build.VERSION_CODES.LOLLIPOP_MR1));
+            CookieSyncManager cookieSyncMngr=CookieSyncManager.createInstance(context);
+            cookieSyncMngr.startSync();
+            CookieManager cookieManager=CookieManager.getInstance();
+            cookieManager.removeAllCookie();
+            cookieManager.removeSessionCookie();
+            cookieSyncMngr.stopSync();
+            cookieSyncMngr.sync();
+        }
+    }
+
+
+
+    private static String shiftArray(String[] array) {
+        String result = array[0];
+        System.arraycopy(array, 1, array, 0, array.length - 1);
+        return result;
+    }
+
+    private static String decode(String url, int userId) {
+        try {
+            String[] vals = url.split("/?extra=")[1].split("#");
+            url = vk_o(vals[0]);
+            String[] opsArr = vk_o(vals[1]).split(String.valueOf('\t'));
+            for (int i = opsArr.length - 1; i >= 0; i--) {
+                String[] argsArr = opsArr[i].split(String.valueOf('\u000b'));
+                String opInd = shiftArray(argsArr);
+                int i2 = -1;
+                url = vk_i(url, Integer.parseInt(argsArr[0]), userId);
+                String s ="";
+                //            switch (i2) {
+                //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_autoDismiss /*0*/:
+                //                    url = vk_i(url, Integer.parseInt(argsArr[0]), userId);
+                //                    break;
+                //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_autoFinish /*1*/:
+                //                    url = vk_v(url);
+                //                    break;
+                //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_backgroundColour /*2*/:
+                //                    url = vk_r(url, Integer.parseInt(argsArr[0]));
+                //                    break;
+                //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_captureTouchEventOnFocal /*3*/:
+                //                    url = vk_x(url, argsArr[0]);
+                //                    break;
+                //                case uk.co.samuelwall.materialtaptargetprompt.R.styleable.PromptView_mttp_captureTouchEventOutsidePrompt /*4*/:
+                //                    url = vk_s(url, Integer.parseInt(argsArr[0]));
+                //                    break;
+                //                default:
+                //                    break;
+                //            }
+            }
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return url.substring(0, url.indexOf("?extra="));
+    }
+
+    private static String vk_i(String str, int e, int userID) {
+        return vk_s(str, e ^ userID);
+    }
+    private static String vk_s(String str, int start) {
+        StringBuilder result = null;
+        try {
+            result = new StringBuilder(str);
+            int len = str.length();
+            int e = start;
+            if (len > 0) {
+                int i;
+                Integer[] shufflePos = new Integer[len];
+                for (i = len - 1; i >= 0; i--) {
+                    e = Math.abs((((i + 1) * len) ^ (e + i)) % len);
+                    shufflePos[i] = Integer.valueOf(e);
+                }
+                for (i = 1; i < len; i++) {
+                    int offset = shufflePos[(len - i) - 1].intValue();
+                    String prev = result.substring(i, i + 1);
+                    result.replace(i, i + 1, result.substring(offset, offset + 1));
+                    result.replace(offset, offset + 1, prev);
+                }
+            }
+        } catch (Exception e1) {
+            e1.printStackTrace();
+        }
+        return result.toString();
+    }
+
+    private static String vk_o(String str) {
+        StringBuilder b = null;
+        try {
+            int len = str.length();
+            int i = 0;
+            b = new StringBuilder();
+            int index2 = 0;
+            for (int s = 0; s < len; s++) {
+                int symIndex = STR.indexOf(str.substring(s, s + 1));
+                if (symIndex >= 0) {
+                    if (index2 % 4 != 0) {
+                        i = (i << 6) + symIndex;
+                    } else {
+                        i = symIndex;
+                    }
+                    if (index2 % 4 != 0) {
+                        index2++;
+                        b.append((char) ((i >> ((index2 * -2) & 6)) & 255));
+                    } else {
+                        index2++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return b.toString();
+    }
+
+    class RequestTask extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... uri) {
+            HttpClient httpclient = new DefaultHttpClient();
+            HttpResponse response;
+            String responseString = null;
+            try {
+                response = httpclient.execute(new HttpGet(uri[0]));
+                StatusLine statusLine = response.getStatusLine();
+                if(statusLine.getStatusCode() == HttpStatus.SC_OK){
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    response.getEntity().writeTo(out);
+                    responseString = out.toString();
+                    out.close();
+                } else{
+                    //Closes the connection.
+                    response.getEntity().getContent().close();
+                    throw new IOException(statusLine.getReasonPhrase());
+                }
+            } catch (ClientProtocolException e) {
+                //TODO Handle problems..
+            } catch (IOException e) {
+                //TODO Handle problems..
+            }
+            return responseString;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+
+            String ava = result.substring(result.indexOf("page_avatar_img\" src=\"") + 22,result.indexOf("alt") -3);
+            String dd = "";
+
+            //Do anything with response..
+        }
+    }
+
 }

@@ -10,13 +10,20 @@
     android:paddingTop="4dp">
 
     <ImageView
+        android:id="@+id/audio_album"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_centerVertical="true"
+        app:srcCompat="@drawable/audio" />
+
+    <ImageView
         android:id="@+id/audio_download"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
         android:layout_marginRight="8dp"
-        app:srcCompat="@drawable/icon_download" />
+        app:srcCompat="@drawable/ic_cloud_download" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -50,11 +57,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
+            android:paddingLeft="55dp"
             android:paddingRight="40dp"
             android:singleLine="true"
             android:text="SONG TITLE"
             android:textAlignment="textStart"
-            android:textColor="@color/vk_white"
+            android:textColor="@color/vk_black"
             android:textSize="16sp" />
 
         <TextView
@@ -62,11 +70,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="start"
+            android:paddingLeft="55dp"
             android:paddingRight="40dp"
             android:singleLine="true"
             android:text="SONG TITLE"
             android:textAlignment="textStart"
-            android:textColor="@color/dark"
+            android:textColor="@color/grey"
             android:textSize="14sp" />
 
         <Button
@@ -86,7 +95,8 @@
             android:layout_below="@+id/btn_delete"
             android:layout_marginRight="8dp"
             android:layout_marginTop="4dp"
-            android:background="@color/dark" />
+            android:background="@color/dark"
+            android:visibility="gone" />
     </LinearLayout>
 
 

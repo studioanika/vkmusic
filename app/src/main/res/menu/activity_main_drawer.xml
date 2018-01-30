@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_my"
+            android:icon="@drawable/my_audio"
+            android:title="Мои аудиозаписи" />
+        <item
+            android:id="@+id/nav_special"
+            android:icon="@drawable/special"
+            android:title="Специально для вас" />
+        <item
+            android:id="@+id/nav_news"
+            android:icon="@drawable/news"
+            android:title="Новинки" />
+        <item
+            android:id="@+id/nav_popular"
+            android:icon="@drawable/popular"
+            android:title="Популярное" />
+        <item
+            android:id="@+id/nav_feed"
+            android:icon="@drawable/friends_update"
+            android:title="Обновления друзей" />
+        <item
+            android:id="@+id/nav_friends"
+            android:icon="@drawable/friends"
+            android:title="Музыка друзей" />
+        <item
+            android:id="@+id/nav_groups"
+            android:icon="@drawable/wall"
+            android:title="Стена групп" />
+
+
+    </group>
+
+    <group android:id="@+id/grr">
+        <item
+            android:id="@+id/nav_folder"
+            android:icon="@drawable/ic_create_new_folder_black_24dp"
+            android:title="Выбор папки" />
+        <item
+            android:id="@+id/nav_exit"
+            android:icon="@drawable/ic_exit_to_app_black_24dp"
+            android:title="Выход" />
+
+    </group>
+
+
+</menu>

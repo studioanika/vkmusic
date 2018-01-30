@@ -45,7 +45,7 @@ public class JcPlayerView extends LinearLayout implements
 
     private static OnClickListener mListener;
 
-    private static final int PULSE_ANIMATION_DURATION = 200;
+    private static final int PULSE_ANIMATION_DURATION = 400;
     private static final int TITLE_ANIMATION_DURATION = 600;
 
     private TextView txtCurrentMusic;
@@ -60,7 +60,7 @@ public class JcPlayerView extends LinearLayout implements
     private SeekBar seekBar;
     private TextView txtCurrentDuration;
     private boolean isInitialized;
-    ImageView btnPlayMini;
+    ImageView btnPlayMini, btnNextMini;
     TextView txtCurrentMusicMini;
     RelativeLayout relMini, relPlayer;
     private boolean isMini = true;
@@ -131,14 +131,14 @@ public class JcPlayerView extends LinearLayout implements
         public void onPaused() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 btnPlay.setBackground(ResourcesCompat.getDrawable(getResources(),
-                        R.drawable.ic_play_black, null));
-                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_black));
+                        R.drawable.ic_play_white, null));
+                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_arrow_black_24dp_dark));
             } else {
                 btnPlay.setBackgroundDrawable(ResourcesCompat.getDrawable(getResources(),
-                        R.drawable.ic_play_black, null));
-                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_black));
+                        R.drawable.ic_play_white, null));
+                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_play_arrow_black_24dp_dark));
             }
-            btnPlay.setTag(R.drawable.ic_play_black);
+            btnPlay.setTag(R.drawable.ic_play_white);
         }
 
         @Override
@@ -151,11 +151,11 @@ public class JcPlayerView extends LinearLayout implements
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                 btnPlay.setBackground(ResourcesCompat.getDrawable(getResources(),
                         R.drawable.ic_pause_black, null));
-                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_black));
+                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_black_24dp_dark));
             } else {
                 btnPlay.setBackgroundDrawable(ResourcesCompat.getDrawable(getResources(),
                         R.drawable.ic_pause_black, null));
-                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_black));
+                btnPlayMini.setImageDrawable(getResources().getDrawable(R.drawable.ic_pause_black_24dp_dark));
             }
             btnPlay.setTag(R.drawable.ic_pause_black);
         }
@@ -186,8 +186,17 @@ public class JcPlayerView extends LinearLayout implements
         public void updateTitle(final String title) {
 //            final String mTitle = title;
 
-            final String name_t = title.split("-")[0];
-            final String title_t = title.split("-")[1];
+            String name_t;
+            String title_t;
+
+            try {
+                name_t = title.split("--")[0];
+                title_t = title.split("--")[1];
+            } catch (Exception e) {
+                name_t = title.split("-")[0];
+                title_t = title.split("-")[1];
+                e.printStackTrace();
+            }
             //title_t = title_t.replaceAll(" ","");
 
             YoYo.with(Techniques.FadeInLeft)
@@ -200,16 +209,18 @@ public class JcPlayerView extends LinearLayout implements
                     .duration(TITLE_ANIMATION_DURATION)
                     .playOn(txtCurrentMusicMini);
 
+            final String finalTitle_t = title_t;
             txtCurrentMusicTitle.post(new Runnable() {
                 @Override
                 public void run() {
-                    txtCurrentMusicTitle.setText(title_t);
+                    txtCurrentMusicTitle.setText(finalTitle_t);
                 }
             });
+            final String finalName_t = name_t;
             txtCurrentMusic.post(new Runnable() {
                 @Override
                 public void run() {
-                    txtCurrentMusic.setText(name_t);
+                    txtCurrentMusic.setText(finalName_t);
                 }
             });
             txtCurrentMusic.post(new Runnable() {
@@ -228,7 +239,7 @@ public class JcPlayerView extends LinearLayout implements
 
     @Override
     public void onProgressChanged(HoloCircleSeekBar holoCircleSeekBar, int i, boolean b) {
-        if (b && jcAudioPlayer != null && i>5 && i <holoCircleSeekBar.getMaxValue()-100) jcAudioPlayer.seekTo(i);
+        if (b && jcAudioPlayer != null && i>1 && i <holoCircleSeekBar.getMaxValue()-100) jcAudioPlayer.seekTo(i);
     }
 
     @Override
@@ -340,6 +351,7 @@ public class JcPlayerView extends LinearLayout implements
         this.btnPrev = (ImageButton) findViewById(R.id.btn_prev);
         this.btnPlay = (ImageButton) findViewById(R.id.btn_play);
         this.btnPlayMini = (ImageView) findViewById(R.id.btn_play_mini);
+        this.btnNextMini = (ImageView) findViewById(R.id.btn_next_mini);
         this.txtDuration = (TextView) findViewById(R.id.txt_total_duration);
         this.txtCurrentDuration = (TextView) findViewById(R.id.txt_current_duration);
         this.txtCurrentMusic = (TextView) findViewById(R.id.txt_current_music);
@@ -347,7 +359,7 @@ public class JcPlayerView extends LinearLayout implements
         this.txtCurrentMusicMini = (TextView) findViewById(R.id.text_current_music_mini);
         this.seekBar = (SeekBar) findViewById(R.id.seek_bar);
         this.holoCircleSeekBar = (HoloCircleSeekBar) findViewById(R.id.picker);
-        this.btnPlay.setTag(R.drawable.ic_play_black);
+        this.btnPlay.setTag(R.drawable.ic_play_white);
         this.relMini = (RelativeLayout) findViewById(R.id.relPlayerMini);
         this.relPlayer = (RelativeLayout) findViewById(R.id.relPlaing) ;
         this.btm_list = (ImageView) findViewById(R.id.btn_list);
@@ -356,14 +368,13 @@ public class JcPlayerView extends LinearLayout implements
         this.avatarView = (AvatarView) findViewById(R.id.avatar);
 
         imageLoader1 = new PicassoLoader();
-
-
         imageLoader1.loadImage(avatarView, "https://vk.com/doc111489133_457112879?hash=9efe68af7d3def3c8d&dl=ef6543c6aa768ffa38", "");
 
         btnNext.setOnClickListener(this);
         btnPrev.setOnClickListener(this);
         btnPlay.setOnClickListener(this);
         btnPlayMini.setOnClickListener(this);
+        btnNextMini.setOnClickListener(this);
         seekBar.setOnSeekBarChangeListener(this);
         holoCircleSeekBar.setOnSeekBarChangeListener(this);
         relMini.setOnClickListener(this);
@@ -386,6 +397,7 @@ public class JcPlayerView extends LinearLayout implements
         jcAudioPlayer = new JcAudioPlayer(getContext(), playlist, jcPlayerViewServiceListener);
         jcAudioPlayer.registerInvalidPathListener(onInvalidPathListener);
         //jcAudioPlayer.registerStatusListener(jcPlayerViewStatusListener);
+        this.txtCurrentMusicMini.setText(playlist.get(0).getTitle());
         isInitialized = true;
     }
 
@@ -485,6 +497,11 @@ public class JcPlayerView extends LinearLayout implements
 
         try {
             jcAudioPlayer.playAudio(jcAudio);
+//            if(jcAudio.getAlbum_img().length()> 0) {
+//                imageLoader1 = new PicassoLoader();
+//                imageLoader1.loadImage(avatarView, jcAudio.getAlbum_img(), "");
+//            }
+
         } catch (AudioListNullPointerException e1) {
             dismissProgressBar();
             e1.printStackTrace();
@@ -569,6 +586,12 @@ public class JcPlayerView extends LinearLayout implements
                     .playOn(btnNext);
             next();
         }
+        if (view.getId() == R.id.btn_next_mini) {
+            YoYo.with(Techniques.Landing)
+                    .duration(PULSE_ANIMATION_DURATION)
+                    .playOn(btnNext);
+            next();
+        }
 
         if (view.getId() == R.id.btn_prev) {
             YoYo.with(Techniques.Landing)
@@ -577,8 +600,10 @@ public class JcPlayerView extends LinearLayout implements
             previous();
         }
         if(view.getId()== R.id.relPlayerMini){
-            if(isMini && jcAudioPlayer.isPlaying()) hideMini();
-            else showMini();
+            if(jcAudioPlayer != null){
+                if(jcAudioPlayer.getPlaylist()!=null && jcAudioPlayer.getPlaylist().size()!=0) hideMini();
+            }
+
         }
         if(view.getId() == R.id.btn_list){
             YoYo.with(Techniques.Landing)

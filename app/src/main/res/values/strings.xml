@@ -1,18 +1,20 @@
 <resources>
-    <string name="app_name">VK Plus</string>
+    <string name="app_name">Музыка с контакта</string>
     <string name="action_settings">Settings</string>
-    <string name="ban1">ca-app-pub-1563785045157371/9612179687</string>
-    <string name="ban2">ca-app-pub-1774878275661991/4397266046</string>
+    <string name="ban1">ca-app-pub-5183973519065139/4964380249</string>
+    <string name="ban2">ca-app-pub-5183973519065139/4964380249</string>
 
-    <string name="id_ad1">ca-app-pub-1563785045157371~3565646083</string>
-    <string name="id_ad2">ca-app-pub-1774878275661991~9264958654</string>
+    <string name="id_ad1">ca-app-pub-1563785045157371~4677687204</string>
+    <string name="id_ad2">ca-app-pub-5183973519065139~5347523627</string>
 
-    <string name="int1">ca-app-pub-1563785045157371/8473393800</string>
-    <string name="int2">ca-app-pub-1774878275661991/7548498400</string>
+    <string name="int1">ca-app-pub-1563785045157371/6345992091</string>
+    <string name="int2">ca-app-pub-5183973519065139/3978122709</string>
 
 
     <string name="fragment_1">VK Plus - приложение, которое позволит слушать музыку без ограничений, скачать как свою музыку с ВК, так и возможность найти в поисковике любимый трек.</string>
     <string name="fragment_2">В случае, если Ваша музыка не отображается, в настройках приватности сделайте: Кто видит список моих аудиозаписей - Все пользователи.</string>
     <integer name="com_vk_sdk_AppId">5955114</integer>
     <string name="text_test">fadsfasdfadsf</string><string name="play_initial_time">00:00</string><string name="track_number">Track</string><string name="title_activity_main2">Main2Activity</string>
+    <string name="navigation_drawer_open">OPEN</string>
+    <string name="navigation_drawer_close">CLOSE</string>
 </resources>

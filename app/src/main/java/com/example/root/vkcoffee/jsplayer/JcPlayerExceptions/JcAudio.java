@@ -1,10 +1,19 @@
 package com.example.root.vkcoffee.jsplayer.JcPlayerExceptions;
 
 import android.support.annotation.RawRes;
+import android.webkit.CookieManager;
 
+import com.example.root.vkcoffee.Application;
 import com.example.root.vkcoffee.Origin;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by root on 24.12.17.
@@ -16,7 +25,15 @@ public class JcAudio implements Serializable {
     private int position;
     private String path;
     private Origin origin;
+    String album_img;
 
+    public String getAlbum_img() {
+        return album_img;
+    }
+
+    public void setAlbum_img(String album_img) {
+        this.album_img = album_img;
+    }
 
     public JcAudio(String title, String path, Origin origin) {
         // It looks bad
@@ -111,4 +128,11 @@ public class JcAudio implements Serializable {
     public static JcAudio createFromFilePath(String title, String filePath) {
         return new JcAudio(title, filePath, Origin.FILE_PATH);
     }
+
+    public static void getSongUrl() {
+
+
+    }
+
+
 }

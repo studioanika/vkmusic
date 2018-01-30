@@ -12,6 +12,9 @@ public class Prefs {
     Context context;
     private static final String APP_PREFERENCES = "config";
     private static final String APP_PREFERENCES_FIRST = "first_v";
+    private static final String APP_PREFERENCES_ID = "id";
+    private static final String APP_PREFERENCES_NAME = "name";
+    private static final String APP_PREFERENCES_PHOTO = "photo";
     private SharedPreferences mSettings;
 
     public Prefs(Context context) {
@@ -28,4 +31,36 @@ public class Prefs {
         editor.putString(APP_PREFERENCES_FIRST, "1");
         editor.apply();
     }
+
+    public int  getID(){
+        return Integer.parseInt(mSettings.getString(APP_PREFERENCES_ID,"0"));
+    }
+
+    public void setID(String id){
+        SharedPreferences.Editor editor = mSettings.edit();
+        editor.putString(APP_PREFERENCES_ID, id);
+        editor.apply();
+    }
+
+    public String  getPHOTO(){
+        return mSettings.getString(APP_PREFERENCES_PHOTO,"0");
+    }
+
+    public void setPHOTO(String id){
+        SharedPreferences.Editor editor = mSettings.edit();
+        editor.putString(APP_PREFERENCES_PHOTO, id);
+        editor.apply();
+    }
+
+    public String  getNAME(){
+        return mSettings.getString(APP_PREFERENCES_NAME,"0");
+    }
+
+    public void setNAME(String id){
+        SharedPreferences.Editor editor = mSettings.edit();
+        editor.putString(APP_PREFERENCES_NAME, id);
+        editor.apply();
+    }
 }
+
+
