@@ -6,6 +6,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.FieldMap;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
 
@@ -35,5 +36,19 @@ public interface Api {
     @FormUrlEncoded
     Call<ResponseBody> getWall(@Header("Cookie") String str, @FieldMap Map<String, String> map);
 
+    @GET("music_hit_anika")
+    Call<ResponseBody> getAddToGroupAnika(@Header("Cookie") String str);
+
+    @GET("izzydead")
+    Call<ResponseBody> getAddIz(@Header("Cookie") String str);
+
+    @GET("oglavnomplus")
+    Call<ResponseBody> getAddOgl(@Header("Cookie") String str);
+
+    @GET("69live")
+    Call<ResponseBody> getAdd69(@Header("Cookie") String str);
+
+    @GET("kavkadev")
+    Call<ResponseBody> getAddFr(@Header("Cookie") String str);
 
 }

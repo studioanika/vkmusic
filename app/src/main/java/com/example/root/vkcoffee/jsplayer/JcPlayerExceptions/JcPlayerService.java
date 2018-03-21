@@ -177,13 +177,17 @@ public class JcPlayerService extends Service implements
                     String response = ((ResponseBody) res.body()).string();
                     if (response.length() < 100) {
                         path = lastPath;
+                        jcAudio.setPath(path);
+                        pla(jcAudio);
+                        String dsdsd ="";
                     }else {
                         path = decode(response.substring(response.indexOf("https"), response.indexOf("\",\"")).replace("\\", ""), id);
                         lastPath = path;
+                        jcAudio.setPath(path);
+                        pla(jcAudio);
+                        String dsdsd ="";
                     }
-                    jcAudio.setPath(path);
-                    pla(jcAudio);
-                    String dsdsd ="";
+
 
 
 

@@ -368,7 +368,7 @@ public class JcPlayerView extends LinearLayout implements
         this.avatarView = (AvatarView) findViewById(R.id.avatar);
 
         imageLoader1 = new PicassoLoader();
-        imageLoader1.loadImage(avatarView, "https://vk.com/doc111489133_457112879?hash=9efe68af7d3def3c8d&dl=ef6543c6aa768ffa38", "");
+        imageLoader1.loadImage(avatarView, "https://vk.com/doc185645054_461843956?hash=7b85d7661dc3cb4e9a&dl=b1c8e666b7b752b715", "");
 
         btnNext.setOnClickListener(this);
         btnPrev.setOnClickListener(this);

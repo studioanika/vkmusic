@@ -5,6 +5,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.example.root.vkcoffee.retrofit.Api;
+import com.example.root.vkcoffee.retrofit.Api2;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKAccessTokenTracker;
 import com.vk.sdk.VKSdk;
@@ -20,7 +21,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class Application extends android.app.Application {
 
     private static Api umoriliApi;
-    private Retrofit retrofit;
+    private static Api2 umoriliApi2;
+    private Retrofit retrofit, retrofit2;
 
     VKAccessTokenTracker vkAccessTokenTracker = new VKAccessTokenTracker() {
         @Override
@@ -43,6 +45,12 @@ public class Application extends android.app.Application {
                 .build();
         umoriliApi = retrofit.create(Api.class);
 
+        retrofit2 = new Retrofit.Builder()
+                .baseUrl("https://anika-cs.by/") //Базовая часть адреса
+                .addConverterFactory(GsonConverterFactory.create()) //Конвертер, необходимый для преобразования JSON'а в объекты
+                .build();
+        umoriliApi2 = retrofit2.create(Api2.class);
+
         //String[] fingerprints = VKUtil.getCertificateFingerprint(this, this.getPackageName());
 
         //vkAccessTokenTracker.startTracking();
@@ -51,6 +59,10 @@ public class Application extends android.app.Application {
 
     public static Api getApi() {
         return umoriliApi;
+    }
+
+    public static Api2 getApi2() {
+        return umoriliApi2;
     }
 
 }

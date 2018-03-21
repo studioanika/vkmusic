@@ -15,6 +15,7 @@ public class Prefs {
     private static final String APP_PREFERENCES_ID = "id";
     private static final String APP_PREFERENCES_NAME = "name";
     private static final String APP_PREFERENCES_PHOTO = "photo";
+    private static final String APP_PREFERENCES_REVIEW = "review";
     private SharedPreferences mSettings;
 
     public Prefs(Context context) {
@@ -60,6 +61,15 @@ public class Prefs {
         SharedPreferences.Editor editor = mSettings.edit();
         editor.putString(APP_PREFERENCES_NAME, id);
         editor.apply();
+    }
+
+    public void setReview(int pred){
+        SharedPreferences.Editor editor = mSettings.edit();
+        editor.putString(APP_PREFERENCES_REVIEW, String.valueOf(pred));
+        editor.apply();
+    }
+    public int getReview(){
+        return Integer.parseInt(mSettings.getString(APP_PREFERENCES_REVIEW,"0"));
     }
 }
 

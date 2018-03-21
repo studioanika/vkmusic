@@ -5,20 +5,14 @@ android {
         config {
             keyAlias 'key'
             keyPassword '3057686Kowerko1'
-            storeFile file('/home/mobi-app/development/project/VKCoffee/30.01.jks')
-            storePassword '3057686Kowerko1'
-        }
-        config1 {
-            keyAlias 'key'
-            keyPassword '3057686Kowerko1'
-            storeFile file('/home/mobi-app/development/project/VKCoffee/30.01.jks')
+            storeFile file('/home/mobi-app/development/project/VKCoffee/new_key_2103_1.jks')
             storePassword '3057686Kowerko1'
         }
     }
     compileSdkVersion 26
     buildToolsVersion "26.0.2"
     defaultConfig {
-        applicationId "com.msk.vkplus"
+        applicationId "net.favorite.vkplus"
         minSdkVersion 17
         targetSdkVersion 26
         versionCode 1
@@ -30,7 +24,7 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config1
+            signingConfig signingConfigs.config
         }
         debug {
             signingConfig signingConfigs.config
