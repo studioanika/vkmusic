@@ -1,13 +1,13 @@
 <resources>
     <string name="app_name">Музыка с контакта</string>
     <string name="action_settings">Settings</string>
-    <string name="ban1">ca-app-pub-5183973519065139/4964380249</string>
+    
     <string name="ban2">ca-app-pub-5183973519065139/4964380249</string>
 
-    <string name="id_ad1">ca-app-pub-1563785045157371~4677687204</string>
+    
     <string name="id_ad2">ca-app-pub-5183973519065139~5347523627</string>
 
-    <string name="int1">ca-app-pub-1563785045157371/6345992091</string>
+    
     <string name="int2">ca-app-pub-5183973519065139/3978122709</string>
 
 
