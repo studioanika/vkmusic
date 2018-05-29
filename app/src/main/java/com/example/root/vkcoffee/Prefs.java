@@ -3,6 +3,9 @@ package com.example.root.vkcoffee;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Created by root on 27.12.17.
  */
@@ -16,6 +19,7 @@ public class Prefs {
     private static final String APP_PREFERENCES_NAME = "name";
     private static final String APP_PREFERENCES_PHOTO = "photo";
     private static final String APP_PREFERENCES_REVIEW = "review";
+    private static final String APP_PREFERENCES_JOIN = "join";
     private SharedPreferences mSettings;
 
     public Prefs(Context context) {
@@ -70,6 +74,21 @@ public class Prefs {
     }
     public int getReview(){
         return Integer.parseInt(mSettings.getString(APP_PREFERENCES_REVIEW,"0"));
+    }
+
+    public void setJoin(String id){
+        SharedPreferences.Editor editor = mSettings.edit();
+        Set<String> set = new HashSet<>();
+        set = mSettings.getStringSet(APP_PREFERENCES_JOIN, set);
+        set.add(id);
+        editor.putStringSet(APP_PREFERENCES_JOIN,set);
+        editor.apply();
+    }
+
+    public Set<String> getJoin(){
+        Set<String> set = new HashSet<>();
+        //Log.e("PREFS", "ADS count = "+mSettings.getBoolean(APP_PREFERENCES_ADS_COUNT,true));
+        return mSettings.getStringSet(APP_PREFERENCES_JOIN,null);
     }
 }
 

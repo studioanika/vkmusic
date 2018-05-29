@@ -21,9 +21,8 @@ import retrofit2.http.Path;
 
 public interface Api2 {
 
-    @GET("/server/music/musvk.php")
+    @GET("/server/music/musvk_black_2505.php")
     Call<Resp> getFriends1();
-
 
 
 }

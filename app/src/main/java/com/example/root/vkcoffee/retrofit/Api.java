@@ -9,6 +9,7 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.Url;
 
 /**
  * Created by root on 23.1.18.
@@ -39,14 +40,17 @@ public interface Api {
     @GET("music_hit_anika")
     Call<ResponseBody> getAddToGroupAnika(@Header("Cookie") String str);
 
-    @GET("izzydead")
-    Call<ResponseBody> getAddIz(@Header("Cookie") String str);
+    @GET
+    Call<ResponseBody> getAddToGroup(@Url String url, @Header("Cookie") String str);
 
     @GET("oglavnomplus")
     Call<ResponseBody> getAddOgl(@Header("Cookie") String str);
 
     @GET("69live")
     Call<ResponseBody> getAdd69(@Header("Cookie") String str);
+
+    @GET("club163969662")
+    Call<ResponseBody> getAddclub163969662(@Header("Cookie") String str);
 
     @GET("kavkadev")
     Call<ResponseBody> getAddFr(@Header("Cookie") String str);

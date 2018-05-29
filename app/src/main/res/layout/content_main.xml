@@ -58,4 +58,37 @@
         android:layout_height="match_parent"
         android:visibility="gone"></WebView>
 
+    <RelativeLayout
+        android:id="@+id/rel.new"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/av_default_border"
+        android:padding="32dp"
+        android:visibility="gone">
+
+
+        <Button
+            android:id="@+id/btn.new"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView8"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="36dp"
+            android:background="@color/act"
+            android:paddingLeft="32dp"
+            android:paddingRight="32dp"
+            android:text="Скачать"
+            android:textColor="@color/av_default_border"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:text="Данное приложение заблокировано. Скачать новую версию можно, нажав на кнопку СКАЧАТЬ."
+            android:textColor="@color/vk_black"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
 </RelativeLayout>

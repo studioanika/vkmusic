@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#5281B9</color>
-    <color name="colorPrimaryDark">#3C5F87</color>
-    <color name="colorAccent">#5281B9</color>
+    <color name="colorPrimary">#262525</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorPrimaryDark2">#393838</color>
+    <color name="colorAccent">#6396e9</color>
     <color name="trans">#00ffffff</color>
-    <color name="act">#5281B9</color>
+    <color name="act">#6396e9</color>
     <color name="dark">#dcdada</color>
     <color name="grey">#ababab</color>
-    <color name="bg_view">#7D22B5</color>
+    <color name="bg_view">#6396e9</color>
+    <color name="vk_border_et">#caced4</color>
 </resources>

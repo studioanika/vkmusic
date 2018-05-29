@@ -270,7 +270,7 @@
                         android:layout_width="30dp"
                         android:layout_height="30dp"
                         android:layout_centerInParent="true"
-                        app:srcCompat="@drawable/folder" />
+                        app:srcCompat="@drawable/ic_folder_open_black_24dp" />
                 </RelativeLayout>
 
 
@@ -289,7 +289,7 @@
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:text="Плейлист"
-                    android:textColor="@color/grey"
+                    android:textColor="@color/colorPrimary"
                     android:textSize="12sp" />
 
                 <Space
@@ -304,7 +304,7 @@
                     android:layout_weight="1"
                     android:gravity="center_horizontal"
                     android:text="Выбор папки"
-                    android:textColor="@color/grey"
+                    android:textColor="@color/colorPrimary"
                     android:textSize="12sp" />
             </LinearLayout>
         </LinearLayout>

