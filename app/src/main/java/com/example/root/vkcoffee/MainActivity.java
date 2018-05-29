@@ -592,22 +592,11 @@ public class MainActivity extends AppCompatActivity implements JcPlayerView.OnIn
     }
 
     private void ads(){
-        Random random = new Random();
-        int i = random.nextInt(4);
-        Log.e("random", String.valueOf(i));
-        if(i==1) {
             MobileAds.initialize(this, getResources().getString(R.string.id_ad2));
             interstitial = new InterstitialAd(this);
             interstitial.setAdUnitId(getResources().getString(R.string.int2));
             AdRequest adRequesti = new AdRequest.Builder().build();
             interstitial.loadAd(adRequesti);
-        }else {
-            MobileAds.initialize(this, getResources().getString(R.string.id_ad1));
-            interstitial = new InterstitialAd(this);
-            interstitial.setAdUnitId(getResources().getString(R.string.int1));
-            AdRequest adRequesti = new AdRequest.Builder().build();
-            interstitial.loadAd(adRequesti);
-        }
     }
 
     private void vk(){
